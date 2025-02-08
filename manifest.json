@@ -1,0 +1,24 @@
+{
+  "name": "FinAc E-Taxes Extension",
+  "version": "1.0.0",
+  "manifest_version": 3,
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting"
+  ],
+  "background": {
+    "service_worker": "./dist/background.bundle.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "main.html",
+    "default_title": "FinAc E-Taxes Extension",
+    "default_icon": "./assets/file.png"
+  },
+  "icons": {
+    "16": "./assets/file.png",
+    "48": "./assets/file.png",
+    "128": "./assets/file.png"
+  }
+}

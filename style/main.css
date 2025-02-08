@@ -1,0 +1,68 @@
+body{
+    width: 300px;
+    height: 350px;
+    padding: 10px 15px;
+    text-align: center;
+    border: 2px solid cornflowerblue;
+    border-radius: 15px;
+}
+button{
+    padding: 6px 8px;
+    background-color: cornflowerblue;
+    color: white;
+    border-radius: 5px;
+    transition: .2s;
+    border: 2px solid white;
+    margin-top: 10px;
+    cursor: pointer;
+    font-size: 15px;
+    width: 70%;
+}
+button:hover{
+    background-color: transparent;
+    color: cornflowerblue;
+    border-radius: 10px;
+    border: 2px solid cornflowerblue;
+}
+#logout-form{
+    display: none;
+}
+input{
+    width: 80%;
+    padding: 6px 4px;
+    border-radius: 5px;
+    margin: 5px 0;
+    font-size: 15px;
+}
+.popup{
+    padding: 10px 20px;
+}
+
+#describer{
+    font-size: 16px;
+}
+
+.contact{
+    position: absolute;
+    top: 85%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+.contact > p{
+    font-size: 16px;
+}
+
+.header{
+    background-color: cornflowerblue;
+    border-radius: 10px;
+    border: 2px solid white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    justify-content: space-evenly;
+}
+.header > img{
+    border: 3px solid rgb(28, 99, 230);
+    width: 60px;
+    border-radius: 50%;
+}
