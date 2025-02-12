@@ -4,7 +4,7 @@ chrome.storage.local.get(['authenticated'], (result) => {
 
             const handleUrlChange = () => {
                 const currentUrl = window.location.href;
-                if (currentUrl.includes('https://new.e-taxes.gov.az/eportal/az/invoice')) {
+                if (currentUrl && currentUrl.includes('https://new.e-taxes.gov.az/eportal/az/invoice')) {
                     startObserving();
                 }
             };
@@ -33,7 +33,6 @@ chrome.storage.local.get(['authenticated'], (result) => {
         const initializeButton = () => {
             const container = document.querySelector(".vhf-page-list-controls-sort-right");
             if (container && (!document.querySelector("#fetch-tax-button") && !document.querySelector("#presentation-button"))) {
-                console.log("Initilize button start")
                 fetchButton(container);
             }
         };
@@ -47,7 +46,6 @@ chrome.storage.local.get(['authenticated'], (result) => {
                 childList: true,
                 subtree: true,
             });
-            console.log("ObservePageChanges")
             initializeButton();
         };
 
@@ -96,13 +94,13 @@ chrome.storage.local.get(['authenticated'], (result) => {
                 openDataInNewTab(extractedData)
             });
             btnPresent.addEventListener("click", async () => {
-                const listContainer = document.querySelector(".list-view");
-                if (listContainer && !document.querySelector("#presentation-table")) {
-                    const tableContainer = document.createElement("div");
-                    const tbody = creatingTable(tableContainer, listContainer);
-                    const processButton = createProcessButton(tbody);
-                    tableContainer.appendChild(processButton);
-                }
+
+                openModal();
+
+                // const listContainer = document.querySelector(".list-view");
+                // if (listContainer && !document.querySelector("#presentation-table")) {
+
+                // }
             });
 
 
@@ -368,8 +366,56 @@ chrome.storage.local.get(['authenticated'], (result) => {
 })
 
 
-function creatingTable(tableContainer, listContainer) {
+
+function creatingFetchButton(container) {
+    const btn = document.createElement('button');
+    btn.id = "fetch-tax-button";
+    btn.type = 'button';
+    btn.className = 'mr-2 btn btn-outline-primary';
+    btn.style.width = '100%';
+    btn.textContent = 'Bütün qaimələri çap et';
+    btn.style.display = 'block'
+    container.prepend(btn);
+    return btn;
+}
+
+function creatingLoadingTab(container) {
+    const loadingTab = document.createElement('div');
+    loadingTab.className = 'loading-tab'
+    loadingTab.style.position = 'fixed';
+    loadingTab.style.top = '0';
+    loadingTab.style.left = '0';
+    loadingTab.style.width = '100%';
+    loadingTab.style.height = '100%';
+    loadingTab.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+    loadingTab.style.color = 'white';
+    loadingTab.style.textAlign = 'center';
+    loadingTab.style.display = 'flex';
+    loadingTab.style.justifyContent = 'center';
+    loadingTab.style.alignItems = 'center';
+    loadingTab.style.fontSize = '1.5rem';
+    loadingTab.style.zIndex = '1000';
+    container.appendChild(loadingTab);
+    return loadingTab;
+}
+
+// ____EQF Presentation Modal Start____ //
+
+function creatingPresentationButton(container) {
+    const btn = document.createElement('button');
+    btn.id = "presentation-button";
+    btn.type = 'button';
+    btn.className = 'mr-2 btn btn-outline-primary';
+    btn.style.width = '100%';
+    btn.textContent = 'Sürətli təqdim et';
+    btn.style.display = 'block'
+    container.prepend(btn);
+    return btn;
+}
+
+function creatingTable(tableContainer) {
     const title = document.createElement("h6");
+
     title.textContent = "Təqdim etmə cədvəli";
     tableContainer.append(title);
     tableContainer.id = "presentation-container";
@@ -382,7 +428,7 @@ function creatingTable(tableContainer, listContainer) {
     const thead = document.createElement("thead");
     const headerRow = document.createElement("tr");
     const headers = [
-        "№", "Alcının VÖEN-i", "Alcının adı", "Malın kodu", "Malın adı", "Əmtəənin qlobal identifikasiya nömrəsi (GTIN)",
+        "№", "Alıcının VÖEN-i", "Alıcının adı", "Malın kodu", "Malın adı", "ƏQİN",
         "Ölçü vahidi", "Malın miqdarı", "Malın buraxılış qiyməti", "Aksiz dərəcəsi(%)",
         "Aksiz məbləği", "Yol vergisi məbləği", "ƏDV-yə 18 faiz dərəcə ilə cəlb edilən",
         "ƏDV-yə 0 dərəcə ilə cəlb edilən məbləğ", "ƏDV-dən azad olunan", "ƏDV-yə cəlb edilməyən məbləğ", "Əlavə"
@@ -390,6 +436,8 @@ function creatingTable(tableContainer, listContainer) {
     headers.forEach(headerText => {
         const th = document.createElement("th");
         th.textContent = headerText;
+        th.style.padding = "8px"
+        th.style.fontSize = '13px'
         headerRow.appendChild(th);
     });
     thead.appendChild(headerRow);
@@ -402,18 +450,18 @@ function creatingTable(tableContainer, listContainer) {
     // Create a few default editable rows
     for (let i = 0; i < 5; i++) {
         const row = document.createElement("tr");
+        row.style.padding = "2px"
         for (let j = 0; j < headers.length; j++) {
             const cell = document.createElement("td");
-            cell.contentEditable = "true"; // Allow editing/pasting data
+            cell.contentEditable = "true";
             cell.style.border = "1px solid black";
-            cell.style.padding = "3px";
+            cell.style.padding = "2px";
             row.appendChild(cell);
         }
         tbody.appendChild(row);
     }
 
     tableContainer.appendChild(table);
-    listContainer.appendChild(tableContainer);
 
     table.addEventListener("paste", (event) => {
         event.preventDefault();
@@ -422,7 +470,7 @@ function creatingTable(tableContainer, listContainer) {
         const pastedData = clipboardData.getData("text");
         const rows = pastedData.split("\n").filter(row => row.trim() !== "").map(row => row.split("\t"));
 
-        tbody.innerHTML = ""; 
+        tbody.innerHTML = "";
         rows.forEach(rowData => {
             const row = document.createElement("tr");
             rowData.forEach((cellData, index) => {
@@ -433,6 +481,7 @@ function creatingTable(tableContainer, listContainer) {
                 cell.textContent = cellData;
                 cell.style.border = "1px solid black";
                 cell.style.padding = "3px";
+                cell.style.fontSize = "11px"
                 cell.contentEditable = "true";
                 row.appendChild(cell);
             });
@@ -446,7 +495,7 @@ function creatingTable(tableContainer, listContainer) {
 function createProcessButton(tbody) {
     const processButton = document.createElement("button");
     processButton.className = 'mt-4 btn btn-outline-primary';
-    processButton.textContent = "Download All Invoices";
+    processButton.textContent = "Qaimələri paketlə";
 
     processButton.addEventListener("click", async () => {
         const table = tbody.closest("table");
@@ -481,169 +530,542 @@ function createProcessButton(tbody) {
             return invoices;
         };
 
-        const generateXML = (invoiceData) => `
-        <!DOCTYPE html>
-        <html xmlns="http://www.w3.org/1999/xhtml">
-        <head>
-            <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-            <style>
-                body {background-color: white; font-family: Arial, sans-serif;}
-                .paper {padding: 5px;}
-                table {width: 100%; font-size: 16px;}
-                table tr td {padding: 10px 15px; text-align: left; width: 50%;}
-                .products table {border-collapse: collapse; font-size: 14px;}
-                .products table th, .products table td {border: 1px solid #000; padding: 10px; text-align: center;}
-                .noPadding {padding: 40px 0;}
-                .total tr td:nth-child(odd) {width: 40%;}
-                .total tr td:nth-child(even) {width: 10%;}
-            </style>
-        </head>
-        <body>
-            <table class="paper">
-                <tbody>
-                    <tr><td>Alan tərəfin VÖEN-i:</td><td>${invoiceData.buyerTaxId}</td></tr>
-                    <tr><td>Alan tərəfin adı:</td><td>${invoiceData.buyerName}</td></tr>
-                    <tr><td>Satan tərəfin VÖEN-i:</td><td>${invoiceData.sellerTaxId}</td></tr>
-                    <tr><td>Qeyd:</td><td>${invoiceData.note}</td></tr>
-                    <tr><td>Əlavə qeyd:</td><td>${invoiceData.additionalNote}</td></tr>
-                    <tr><td>Obyektin adı:</td><td>${invoiceData.objectName}</td></tr>
-                    <tr><td>Obyektin kodu:</td><td>${invoiceData.objectCode}</td></tr>
-                    <tr>
-                        <td class="products noPadding" colspan="2">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Mal kodu</th>
-                                        <th>Mal adı</th>
-                                        <th>Bar kod</th>
-                                        <th>Ölçü vahidi</th>
-                                        <th>Malın miqdarı</th>
-                                        <th>Malın buraxılış qiyməti</th>
-                                        <th>Cəmi qiyməti</th>
-                                        <th>Aksiz dərəcəsi</th>
-                                        <th>Aksiz məbləği</th>
-                                        <th>Cəmi məbləğ</th>
-                                        <th>ƏDV-yə cəlb edilən məbləğ</th>
-                                        <th>ƏDV-yə cəlb edilməyən məbləğ</th>
-                                        <th>ƏDV-dən azad olunan</th>
-                                        <th>ƏDV-yə 0 dərəcə ilə cəlb edilən məbləğ</th>
-                                        <th>Ödənilməli ƏDV</th>
-                                        <th>Yol vergisi məbləği</th>
-                                        <th>Yekun məbləğ</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="productTable">
-                                    ${invoiceData.products.map(product => `
-                                        <tr>
-                                            <td>${product.code}</td>
-                                            <td>${product.name}</td>
-                                            <td>${product.barCode}</td>
-                                            <td>${product.unit}</td>
-                                            <td>${product.quantity}</td>
-                                            <td>${product.price}</td>
-                                            <td>${product.total}</td>
-                                            <td>0</td><td>0</td><td>${product.total}</td>
-                                            <td>${product.total}</td><td>0</td><td>0</td><td>0</td>
-                                            <td>${(product.total * 0.18).toFixed(2)}</td>
-                                            <td>0.0000</td>
-                                            <td>${(product.total * 1.18).toFixed(2)}</td>
-                                        </tr>
-                                    `).join("")}
-                                </tbody>
-                            </table>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            <table class="total">
-                <tbody>
-                    <tr><td>Malların cəmi qiyməti</td><td>${invoiceData.total}</td></tr>
-                    <tr><td>Yekun məbləğ</td><td>${invoiceData.finalTotal}</td></tr>
-                </tbody>
-            </table>
-        </body>
-        </html>
-    `;
+        const generateNewXML = (invoiceData) => `<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="#stylesheet"?>
+<!DOCTYPE root [ <!ATTLIST xsl:stylesheet id ID #REQUIRED>
+]>
+<root xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="304" kod="QAIME_1"
+	xsi:noNamespaceSchemaLocation="QAIME_1.xsd">
+	<xsl:stylesheet id="stylesheet" version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+		<xsl:template match="xsl:stylesheet" />
+		<xsl:template match="/root">
+			<html>
 
+			<head>
+				<style>
+					body {
+						background-color: white;
+						font-family: Arial, sans-serif;
+					}
+
+					.paper {
+						padding: 5px;
+					}
+
+					table {
+						width: 100%;
+						font-size: 16px;
+					}
+
+					table tr td {
+						padding: 10px 15px;
+						text-align: left;
+						width: 50%;
+					}
+
+					.products table {
+						border-collapse: collapse;
+						font-size: 14px;
+					}
+
+					.products table th,
+					#products table td {
+						border: 1px solid #000;
+						padding: 10px;
+					}
+
+					.products table td {
+						width: auto;
+						border: 1px solid #000;
+						text-align: center;
+					}
+
+					.products table th {
+						text-align: center;
+					}
+
+					.noPadding {
+						padding: 40px 0px;
+					}
+
+					.total tr :nth-child(odd) {
+						width: 40%;
+					}
+
+					.total tr :nth-child(even) {
+						width: 10%;
+					}
+				</style>
+			</head>
+
+			<body>
+				<table class="paper">
+					<tr>
+						<td>Alan tərəfin VÖEN-i:</td>
+						<td>
+							<xsl:value-of select="qaimeKime" />
+						</td>
+					</tr>
+					<tr>
+						<td>Alan tərəfin adı:</td>
+						<td>
+							<xsl:value-of select="qaimeKimeAd" />
+						</td>
+					</tr>
+					<tr>
+						<td>Satan tərəfin VÖEN-i:</td>
+						<td>
+							<xsl:value-of select="qaimeKimden" />
+						</td>
+					</tr>
+					<tr>
+						<td>Qeyd</td>
+						<td>
+							<xsl:value-of select="des" />
+						</td>
+					</tr>
+					<tr>
+						<td>Əlavə qeyd</td>
+						<td>
+							<xsl:value-of select="des2" />
+						</td>
+					</tr>
+					<tr>
+						<td>Obyektin adı</td>
+						<td>
+							<xsl:value-of select="ma" />
+						</td>
+					</tr>
+					<tr>
+						<td>Obyektin kodu</td>
+						<td>
+							<xsl:value-of select="mk" />
+						</td>
+					</tr>
+					<tr>
+						<td class="products noPadding" colspan="2">
+							<table>
+								<thead>
+									<th>Mal kodu</th>
+									<th>Mal adı</th>
+									<th>Bar kod</th>
+									<th>Ölçü vahidi</th>
+									<th>Malın miqdarı</th>
+									<th>Malın buraxılış qiyməti</th>
+									<th>Cəmi qiyməti</th>
+									<th>Aksiz dərəcəsi</th>
+									<th>Aksiz məbləği</th>
+									<th>Cəmi məbləğ</th>
+									<th>ƏDV-yə cəlb edilən məbləğ</th>
+									<th>ƏDV-yə cəlb edilməyən məbləğ</th>
+									<th>ƏDV-dən azad olunan</th>
+									<th>ƏDV-yə 0 dərəcə ilə cəlb edilən məbləğ</th>
+									<th>Ödənilməli ƏDV</th>
+									<th>Yol vergisi məbləği</th>
+									<th>Yekun məbləğ</th>
+								</thead>
+								<tbody class="productTable">
+									<xsl:for-each select="product/qaimeTable/row">
+										<tr>
+											<td>
+												<xsl:value-of select="c1" />
+											</td>
+											<td>
+												<xsl:value-of select="c2" />
+											</td>
+											<td>
+												<xsl:value-of select="c17" />
+											</td>
+											<td>
+												<xsl:value-of select="c3" />
+											</td>
+											<td>
+												<xsl:value-of select="c4" />
+											</td>
+											<td>
+												<xsl:value-of select="c5" />
+											</td>
+											<td>
+												<xsl:value-of select="c6" />
+											</td>
+											<td>
+												<xsl:value-of select="c7" />
+											</td>
+											<td>
+												<xsl:value-of select="c8" />
+											</td>
+											<td>
+												<xsl:value-of select="c9" />
+											</td>
+											<td>
+												<xsl:value-of select="c10" />
+											</td>
+											<td>
+												<xsl:value-of select="c11" />
+											</td>
+											<td>
+												<xsl:value-of select="c12" />
+											</td>
+											<td>
+												<xsl:value-of select="c13" />
+											</td>
+											<td>
+												<xsl:value-of select="c14" />
+											</td>
+											<td>
+												<xsl:value-of select="c15" />
+											</td>
+											<td>
+												<xsl:value-of select="c16" />
+											</td>
+										</tr>
+									</xsl:for-each>
+								</tbody>
+							</table>
+						</td>
+					</tr>
+				</table>
+				<table class="total">
+					<tr>
+						<td>Malların cəmi qiyməti</td>
+						<td>
+							<xsl:value-of select="product/qaimeYekunTable/row/c1" />
+						</td>
+						<td>Malların cəmi məbləği</td>
+						<td>
+							<xsl:value-of select="product/qaimeYekunTable/row/c3" />
+						</td>
+					</tr>
+					<tr>
+						<td>Malların aksiz cəmi məbləği</td>
+						<td>
+							<xsl:value-of select="product/qaimeYekunTable/row/c2" />
+						</td>
+						<td>Malların ƏDV-yə cəlb edilən cəmi məbləği</td>
+						<td>
+							<xsl:value-of select="product/qaimeYekunTable/row/c4" />
+						</td>
+					</tr>
+					<tr>
+						<td>Malların cəmi ödənilməli ƏDV məbləği</td>
+						<td>
+							<xsl:value-of select="product/qaimeYekunTable/row/c8" />
+						</td>
+						<td>Malların ƏDV-yə cəlb edilməyən cəmi məbləği </td>
+						<td>
+							<xsl:value-of select="product/qaimeYekunTable/row/c5" />
+						</td>
+					</tr>
+					<tr>
+						<td>ƏDV-dən azad olunan</td>
+						<td>
+							<xsl:value-of select="product/qaimeYekunTable/row/c6" />
+						</td>
+						<td>Malların ƏDV-yə 0 dərəcə ilə cəlb edilən cəmi məbləği</td>
+						<td>
+							<xsl:value-of select="product/qaimeYekunTable/row/c7" />
+						</td>
+					</tr>
+					<tr>
+						<td>Yekun məbləğ</td>
+						<td>
+							<xsl:value-of select="product/qaimeYekunTable/row/c9" />
+						</td>
+						<td></td>
+						<td></td>
+					</tr>
+				</table>
+			</body>
+
+			</html>
+		</xsl:template>
+	</xsl:stylesheet>
+	<qaimeKime>${invoiceData.buyerTaxId}</qaimeKime>
+	<qaimeKimden>${senderVoen}</qaimeKimden>
+	<ds />
+	<dn />
+	<des>Alqı-satqı müqaviləsi</des>
+	<des2>${invoiceData.additionalNote}</des2>
+	<ma>${invoiceData.buyerName}</ma>
+	<mk />
+	<product>
+		<qaimeTable>
+        ${invoiceData.products.map(product => `
+            <row no="0">
+                <c1>${product.code}</c1>
+                <c2>${product.name}</c2>
+          	    <c3>${product.unit}</c3>
+				<c4>${product.quantity}</c4>
+				<c5>${product.price}</c5>
+				<c6>${(parseFloat(product.quantity) * parseFloat(product.price)).toFixed(2)}</c6>
+				<c7>${product.exciseRate}</c7>
+				<c8>${product.exciseTotal}</c8>
+				<c9>${((parseFloat(product.quantity) * parseFloat(product.price)) + parseFloat(product.exciseTotal)).toFixed(2) }</c9>
+				<c10>${product.edv18}</c10>
+				<c11>${product.edvNot}</c11>
+				<c12>${product.edvFree}</c12>
+				<c13>${product.edv0}</c13>
+				<c14>${(parseFloat(product.edv18) * 0.18).toFixed(2)}</c14>
+				<c15>${product.roadTax}</c15>
+				<c16>${(preciseMultiply(product.quantity,product.price) + parseFloat(product.exciseTotal) + parseFloat((parseFloat(product.edv18) * 0.18).toFixed(2)) + parseFloat(product.roadTax)).toFixed(2)}</c16>
+				<c17>0</c17>
+				<productId>0</productId>
+            </row>
+            `).join('')}
+        
+		</qaimeTable>
+		<qaimeYekunTable>
+			<row>
+				<c1>${invoiceData.allTotal}</c1>
+				<c2>${invoiceData.exciseAllTotal}</c2>
+				<c3>${invoiceData.allTotalWithExcise}</c3>
+				<c4>${invoiceData.edv18Total}</c4>
+				<c5>${invoiceData.edvNotTotal}</c5>
+				<c6>${invoiceData.edvFreeTotal}</c6>
+				<c7>${invoiceData.edv0Total}</c7>
+				<c8>${invoiceData.edvPayAllTotal}</c8>
+				<c9>${invoiceData.lastTotal}</c9>
+				<c10>0.0000</c10>
+			</row>
+		</qaimeYekunTable>
+	</product>
+</root>`;
 
         const groupedInvoices = groupRowsByInvoice(tableData);
         const xmlFiles = [];
-
+        const senderVoen = getVoenOfSender();
+        const today = new Date();
+        const formattedDate = today.toISOString().slice(0, 10).replace(/-/g, '');
         for (let index = 0; index < groupedInvoices.length; index++) {
             const invoiceRows = groupedInvoices[index];
+
+            const allTotal = invoiceRows.reduce((acc, row) => acc + parseFloat(formatNumber(row[7])) * parseFloat(formatNumber(row[8])), 0);
+            const exciseAllTotal = invoiceRows.reduce((acc, row) => acc + parseFloat(formatNumber(row[10])), 0);
+            const allTotalWithExcise = allTotal + exciseAllTotal;
+            const roadTaxTotal = invoiceRows.reduce((acc, row) => acc + parseFloat(formatNumber(row[7])) * parseFloat(formatNumber(row[11])), 0);
+            const edv0Total = invoiceRows.reduce((acc, row) => acc + parseFloat(formatNumber(row[13])), 0);
+            const edvFreeTotal = invoiceRows.reduce((acc, row) => acc + parseFloat(formatNumber(row[14])), 0);
+            const edvNotTotal = invoiceRows.reduce((acc, row) => acc + parseFloat(formatNumber(row[15])), 0);
+
+            const edv18Total = invoiceRows.reduce((acc, row) => acc + parseFloat(formatNumber(row[12])), 0) /* - edvFreeTotal - edv0Total */;
+            const edvPayAllTotal = (edv18Total * 0.18).toFixed(2);
+            const lastTotal = (allTotalWithExcise + roadTaxTotal + parseFloat(edvPayAllTotal)).toFixed(2);
+
             const invoiceData = {
-                buyerTaxId: "1404255921",
-                buyerName: "Sample Buyer",
-                sellerTaxId: "1500151761",
+                buyerTaxId: invoiceRows[0][1],
+                buyerName: invoiceRows[0][2],
+                sellerTaxId: senderVoen,
                 note: "Alqı-satqı müqaviləsi",
+                additionalNote: invoiceRows[0][16],
                 products: invoiceRows.map(row => ({
-                    code: row[2],
-                    name: row[3],
-                    barCode: row[4],
-                    unit: row[5],
-                    quantity: row[6],
-                    price: row[7],
-                    total: row[8],
+                    code: row[3],
+                    name: row[4],
+                    barCode: "0",
+                    unit: row[6],
+                    quantity:  formatNumber(row[7]), 
+                    price: formatNumber(row[8]),
+                    exciseRate: formatNumber(row[9]),
+                    exciseTotal: formatNumber(row[10]),   
+                    roadTax: formatNumber(row[11]),
+                    edv18: formatNumber(row[12]),
+                    edv0: formatNumber(row[13]),
+                    edvFree: formatNumber(row[14]),
+                    edvNot: formatNumber(row[15]),
+                    productTotal: preciseMultiply(row[7],row[8])
                 })),
-                total: invoiceRows.reduce((acc, row) => acc + parseFloat(row[8]), 0),
-                finalTotal: invoiceRows.reduce((acc, row) => acc + parseFloat(row[8]), 0) * 1.18,
+                allTotal: allTotal.toFixed(2),
+                exciseAllTotal: exciseAllTotal.toFixed(2),
+                allTotalWithExcise: allTotalWithExcise.toFixed(2),
+                edvFreeTotal: edvFreeTotal.toFixed(2),
+                edvNotTotal: edvNotTotal.toFixed(2),
+                edv0Total: edv0Total.toFixed(2),
+                edv18Total: edv18Total.toFixed(2),
+                edvPayAllTotal: edvPayAllTotal,
+                lastTotal: lastTotal
             };
 
-            const xmlContent = generateXML(invoiceData);
-            xmlFiles.push({ filename: `invoice_${index + 1}.xml`, content: xmlContent });
-          
+            const xmlContent = generateNewXML(invoiceData);
+            xmlFiles.push({
+                filename: `C_QAIME_${index + 1}_${senderVoen}_${invoiceData.buyerTaxId}_${formattedDate}_v_304.xml`,
+                content: xmlContent
+            });
         }
 
-        chrome.storage.local.set({ xmlContent: xmlFiles }, () => {
-            console.log('XML content saved in local storage');
-          });    });
+
+        chrome.storage.local.set({
+            xmlContent: xmlFiles
+        }, () => {});
+    });
 
     return processButton;
 }
-
-
-
-
-function creatingPresentationButton(container) {
-    const btn = document.createElement('button');
-    btn.id = "presentation-button";
-    btn.type = 'button';
-    btn.className = 'mr-2 btn btn-outline-primary';
-    btn.style.width = '100%';
-    btn.textContent = 'Sürətli təqdim et';
-    btn.style.display = 'block'
-    container.prepend(btn);
-    return btn;
+function parseNumber(value) {
+    if (typeof value === "string") {
+        value = value.replace(",", ".");
+    }
+    let num = parseFloat(value);
+    return isNaN(num) ? 0 : num; 
 }
 
-function creatingFetchButton(container) {
-    const btn = document.createElement('button');
-    btn.id = "fetch-tax-button";
-    btn.type = 'button';
-    btn.className = 'mr-2 btn btn-outline-primary';
-    btn.style.width = '100%';
-    btn.textContent = 'Bütün qaimələri çap et';
-    btn.style.display = 'block'
-    container.prepend(btn);
-    return btn;
+const preciseMultiply = (a, b) => {
+    return parseFloat((parseNumber(a) * parseNumber(b)).toFixed(2));
+};
+function formatNumber(value) {
+    if (typeof value === "string") {
+        value = value.replace(",", "."); 
+    }
+
+    let num = Number(value);
+    if (isNaN(num)) return "Invalid Number"; 
+
+    return Number.isInteger(num) ? num.toString() : num.toFixed(2);
 }
 
-function creatingLoadingTab(container) {
-    const loadingTab = document.createElement('div');
-    loadingTab.className = 'loading-tab'
-    loadingTab.style.position = 'fixed';
-    loadingTab.style.top = '0';
-    loadingTab.style.left = '0';
-    loadingTab.style.width = '100%';
-    loadingTab.style.height = '100%';
-    loadingTab.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-    loadingTab.style.color = 'white';
-    loadingTab.style.textAlign = 'center';
-    loadingTab.style.display = 'flex';
-    loadingTab.style.justifyContent = 'center';
-    loadingTab.style.alignItems = 'center';
-    loadingTab.style.fontSize = '1.5rem';
-    loadingTab.style.zIndex = '1000';
-    container.appendChild(loadingTab);
-    return loadingTab;
+function getVoenOfSender() {
+    const jwtToken = localStorage.getItem('aztax-jwt');
+    const voen = getVoenFromJwt(jwtToken);
+
+    if (voen) {
+        return voen;
+    } else {
+        console.warn('VOEN not found in the JWT payload');
+        return null;
+    }
+
+    function base64UrlDecode(base64Url) {
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const decodedData = atob(base64);
+        return decodedData;
+    }
+
+    function getVoenFromJwt(jwt) {
+        if (!jwt) {
+            console.error('JWT is missing');
+            return null;
+        }
+
+        const parts = jwt.split('.');
+        if (parts.length !== 3) {
+            console.error('Invalid JWT structure');
+            return null;
+        }
+
+        const payload = parts[1];
+        const decodedPayload = base64UrlDecode(payload);
+
+        try {
+            const parsedPayload = JSON.parse(decodedPayload);
+            return parsedPayload.voen;
+        } catch (error) {
+            console.error('Failed to parse JWT payload:', error);
+            return null;
+        }
+    }
+
 }
+
+function createModalForPresentation() {
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+
+    const modalBody = document.createElement("div");
+    modalBody.className = "presentation-modal-body";
+
+    const closeButton = document.createElement("button");
+    closeButton.className = "close-btn";
+    closeButton.innerHTML = "✖";
+    closeButton.onclick = closeModal;
+
+    const tableContainer = document.createElement("div");
+    const tbody = creatingTable(tableContainer);
+    const processButton = createProcessButton(tbody);
+    tableContainer.appendChild(processButton);
+    modalBody.appendChild(tableContainer);
+
+    modalBody.appendChild(closeButton);
+    overlay.appendChild(modalBody);
+    document.body.appendChild(overlay);
+
+    const style = document.createElement("style");
+    style.innerHTML = `
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    .presentation-modal-body {
+        background: white;
+        padding: 10px;
+        width: 90%;
+        max-width: 95%;
+        height: 80vh;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        position: relative;
+        text-align: center;
+        display: flex;
+        overflow:hidden
+        flex-direction: column;
+    }
+
+    #presentation-container {
+        margin-top:30px;
+        flex-grow: 1;
+        overflow-y: auto;
+        max-height: 70vh;
+        padding: 10px;
+    }
+
+    .close-btn {
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        background: #ff4d4d;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .modal-overlay.show {
+        z-index: 100000;
+        visibility: visible;
+        opacity: 1;
+    }
+`;
+    document.head.appendChild(style);
+
+    setTimeout(() => overlay.classList.add("show"), 10);
+}
+
+function openModal() {
+    if (!document.querySelector(".modal-overlay")) {
+        createModalForPresentation();
+    }
+    getVoenOfSender()
+}
+
+
+
+function closeModal() {
+    const overlay = document.querySelector(".modal-overlay");
+    if (overlay) {
+        overlay.classList.remove("show");
+        setTimeout(() => overlay.remove(), 300);
+    }
+}
+
+
+// ____EQF Presentation Modal End____ //

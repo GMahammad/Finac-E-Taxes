@@ -65,4 +65,5 @@ input{
     border: 3px solid rgb(28, 99, 230);
     width: 60px;
     border-radius: 50%;
+    background-color: white;
 }

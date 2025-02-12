@@ -1,7 +1,20 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
-import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
+import {
+  initializeApp
+} from 'firebase/app';
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut
+} from 'firebase/auth';
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc
+} from 'firebase/firestore';
 import JSZip from 'jszip';
+
 const firebaseConfig = {
   apiKey: "AIzaSyBZ6Zp_PLPRe4_u3u90ybtduhIMYe2hmDc",
   authDomain: "finac-e-taxes-extension.firebaseapp.com",
@@ -22,21 +35,23 @@ onAuthStateChanged(auth, async (user) => {
     const deviceId = await fetchOrGenerateDeviceId();
     const deviceValid = await validateDeviceIdForUser(user.email, deviceId);
     if (deviceValid) {
-      chrome.storage.local.set({ authenticated: true });
+      chrome.storage.local.set({
+        authenticated: true
+      });
       console.log(`${user.email} authenticated successfully.`);
       chrome.tabs.query({
         active: true,
         currentWindow: true
-    }, (tabs) => {
-        if (tabs.length > 0) {
-            chrome.scripting.executeScript({
-                target: {
-                    tabId: tabs[0].id
-                },
-                files: ['./js/content.js']
-            });
+      }, (tabs) => {
+        if (tabs && tabs.length > 0) {
+          chrome.scripting.executeScript({
+            target: {
+              tabId: tabs[0].id
+            },
+            files: ['./js/content.js']
+          });
         }
-    });
+      });
     } else {
       await signOut(auth);
       chrome.storage.local.remove('authenticated');
@@ -64,13 +79,22 @@ async function handleLogin(email, password, sendResponse) {
     const user = userCredential.user;
     const deviceId = await fetchOrGenerateDeviceId();
     const deviceValid = await validateDeviceIdForUser(user.email, deviceId);
-    if(deviceValid){
-      sendResponse({ success: true, message: `${user.email} logged in!` });
-    }else{
-      sendResponse({ success: false, message: "Login failed! Device id mismatced." });
+    if (deviceValid) {
+      sendResponse({
+        success: true,
+        message: `${user.email} logged in!`
+      });
+    } else {
+      sendResponse({
+        success: false,
+        message: "Login failed! Device id mismatced."
+      });
     }
   } catch (error) {
-    sendResponse({ success: false, message: "Login failed! Please check your credentials." });
+    sendResponse({
+      success: false,
+      message: "Login failed! Please check your credentials."
+    });
   }
 }
 
@@ -82,7 +106,9 @@ async function fetchOrGenerateDeviceId() {
         resolve(result.deviceId);
       } else {
         const newDeviceId = generateUuid();
-        chrome.storage.sync.set({ deviceId: newDeviceId }, () => resolve(newDeviceId));
+        chrome.storage.sync.set({
+          deviceId: newDeviceId
+        }, () => resolve(newDeviceId));
       }
     });
   });
@@ -97,7 +123,9 @@ async function validateDeviceIdForUser(email, currentDeviceId) {
     const storedDeviceId = docSnap.data().deviceId;
     return storedDeviceId === currentDeviceId;
   } else {
-    await setDoc(userDevicesRef, { deviceId: currentDeviceId });
+    await setDoc(userDevicesRef, {
+      deviceId: currentDeviceId
+    });
     return true;
   }
 }
@@ -107,10 +135,16 @@ async function handleLogout(sendResponse) {
   try {
     await signOut(auth);
     chrome.storage.local.remove('authenticated', () => {
-      sendResponse({ success: true, message: "User signed out!" });
+      sendResponse({
+        success: true,
+        message: "User signed out!"
+      });
     });
   } catch (error) {
-    sendResponse({ success: false, message: "Error signing out." });
+    sendResponse({
+      success: false,
+      message: "Error signing out."
+    });
   }
 }
 
@@ -132,59 +166,58 @@ chrome.storage.local.remove('xmlContent', () => {
 });
 
 chrome.storage.onChanged.addListener((changes, areaName) => {
-  if (areaName === 'local' && changes.xmlContent) {
-    const xmlFiles = changes.xmlContent.newValue; // Array of XML content objects
-    console.log(xmlFiles)
+  if (areaName === "local" && changes.xmlContent) {
+    const xmlFiles = changes.xmlContent.newValue;
     const zip = new JSZip();
+    const today = new Date();
+    const formattedDate = today.toISOString().slice(0, 10).replace(/-/g, '');
 
-    for(let i =0; i< xmlFiles.length; i++){
+    zip.file("vhf-inf/vhf.mf", "VHF-Manifest-Version: 1.0");
 
-      if(xmlFiles[i].content && xmlFiles[i].filename){
+    for (let i = 0; i < xmlFiles.length; i++) {
+      if (xmlFiles[i].content && xmlFiles[i].filename) {
         zip.file(xmlFiles[i].filename, xmlFiles[i].content);
-        console.log(zip)
-      }else{
-        console.warn('Skipping invalid file entry:', { content, filename });
+      } else {
+        console.warn("Skipping invalid file entry:", {
+          content: xmlFiles[i].content,
+          filename: xmlFiles[i].filename
+        });
       }
-    
-      }
-    // Add XML files to the ZIP archive
-    zip.generateAsync({ type: "blob" })
-  .then((zipBlob) => {
-    // Create a file URL from the Blob
-    const fileReader = new FileReader();
-    fileReader.onload = function (event) {
-      const blobUrl = event.target.result; // Data URL for the Blob
+    }
 
-      chrome.downloads.download(
-        {
-          url: blobUrl,
-          filename: 'invoices.zip',
-          saveAs: true,
-        },
-        () => {
+    zip.generateAsync({
+        type: "blob"
+      })
+      .then((zipBlob) => {
+        const reader = new FileReader();
+        reader.onloadend = function () {
+          const blobUrl = reader.result;
+          chrome.downloads.download({
+              url: blobUrl,
+              filename: `paket_${formattedDate}.zip`,
+              saveAs: true,
+            },
+            () => {
+              if (chrome.runtime.lastError) {
+                console.error("Download error:", chrome.runtime.lastError.message);
+              } else {
+                console.log("Download initiated successfully.");
+              }
+            }
+          );
+        };
+        reader.readAsDataURL(zipBlob); // Convert Blob to Data URL
+
+        chrome.storage.local.remove('xmlContent', () => {
           if (chrome.runtime.lastError) {
-            console.error('Download error:', chrome.runtime.lastError.message);
+            console.error('Error removing xmlContent from storage:', chrome.runtime.lastError.message);
           } else {
-            console.log('Download initiated successfully.');
+            console.log('xmlContent removed from storage.');
           }
-        }
-      );
-    };
-
-    fileReader.onerror = function (error) {
-      console.error('Error reading Blob as Data URL:', error);
-    };
-
-    // Read the Blob as a Data URL
-    fileReader.readAsDataURL(zipBlob);
-  })
-  .catch((err) => {
-    console.error('Error generating ZIP:', err);
-  });
-
-
+        });
+      })
+      .catch((err) => {
+        console.error("Error generating ZIP:", err);
+      });
   }
 });
-
-
-
