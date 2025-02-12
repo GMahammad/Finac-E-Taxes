@@ -1,11 +1,12 @@
 {
-  "name": "FinAc E-Taxes Extension",
+  "name": "TaxPro",
   "version": "1.0.0",
   "manifest_version": 3,
   "permissions": [
     "activeTab",
     "storage",
-    "scripting"
+    "scripting",
+    "downloads"
   ],
   "background": {
     "service_worker": "./dist/background.bundle.js",
@@ -13,12 +14,12 @@
   },
   "action": {
     "default_popup": "main.html",
-    "default_title": "FinAc E-Taxes Extension",
-    "default_icon": "./assets/file.png"
+    "default_title": "TaxPro Extension",
+    "default_icon": "./assets/FinAc_simvol.png"
   },
   "icons": {
-    "16": "./assets/file.png",
-    "48": "./assets/file.png",
-    "128": "./assets/file.png"
+    "16": "./assets/FinAc_simvol.png",
+    "48": "./assets/FinAc_simvol.png",
+    "128": "./assets/FinAc_simvol.png"
   }
 }
