@@ -365,7 +365,7 @@ chrome.storage.local.get(['authenticated'], (result) => {
     }
 })
 
-
+// ____EQF Collect Function Start____ //
 
 function creatingFetchButton(container) {
     const btn = document.createElement('button');
@@ -399,7 +399,7 @@ function creatingLoadingTab(container) {
     return loadingTab;
 }
 
-// ____EQF Presentation Modal Start____ //
+// ____EQF Collect Function End____ //
 
 function creatingPresentationButton(container) {
     const btn = document.createElement('button');
@@ -415,51 +415,61 @@ function creatingPresentationButton(container) {
 
 function creatingTable(tableContainer) {
     const title = document.createElement("h6");
-
     title.textContent = "Təqdim etmə cədvəli";
     tableContainer.append(title);
     tableContainer.id = "presentation-container";
-
     const table = document.createElement("table");
     table.id = "presentation-table";
     table.style.border = "1px solid black";
     table.style.width = "100%";
     table.style.borderCollapse = "collapse";
+
     const thead = document.createElement("thead");
     const headerRow = document.createElement("tr");
+
     const headers = [
         "№", "Alıcının VÖEN-i", "Alıcının adı", "Malın kodu", "Malın adı", "ƏQİN",
         "Ölçü vahidi", "Malın miqdarı", "Malın buraxılış qiyməti", "Aksiz dərəcəsi(%)",
         "Aksiz məbləği", "Yol vergisi məbləği", "ƏDV-yə 18 faiz dərəcə ilə cəlb edilən",
         "ƏDV-yə 0 dərəcə ilə cəlb edilən məbləğ", "ƏDV-dən azad olunan", "ƏDV-yə cəlb edilməyən məbləğ", "Əlavə"
     ];
+
+    headers.push("Sil"); // Add delete column
+
     headers.forEach(headerText => {
         const th = document.createElement("th");
         th.textContent = headerText;
-        th.style.padding = "8px"
-        th.style.fontSize = '13px'
+        th.style.padding = "8px";
+        th.style.fontSize = "13px";
         headerRow.appendChild(th);
     });
+
     thead.appendChild(headerRow);
     table.appendChild(thead);
 
-    // Create an empty tbody
     const tbody = document.createElement("tbody");
     table.appendChild(tbody);
 
-    // Create a few default editable rows
-    for (let i = 0; i < 5; i++) {
+    createNewRowBtn(tableContainer, tbody, headers);
+
+    function addDefaultRow() {
         const row = document.createElement("tr");
-        row.style.padding = "2px"
-        for (let j = 0; j < headers.length; j++) {
+        row.style.padding = "2px";
+
+        for (let j = 0; j < headers.length - 1; j++) {
             const cell = document.createElement("td");
             cell.contentEditable = "true";
             cell.style.border = "1px solid black";
             cell.style.padding = "2px";
             row.appendChild(cell);
         }
+
+        addDeleteButton(row);
+
         tbody.appendChild(row);
     }
+
+    addDefaultRow();
 
     tableContainer.appendChild(table);
 
@@ -468,28 +478,89 @@ function creatingTable(tableContainer) {
 
         const clipboardData = event.clipboardData || window.clipboardData;
         const pastedData = clipboardData.getData("text");
-        const rows = pastedData.split("\n").filter(row => row.trim() !== "").map(row => row.split("\t"));
 
-        tbody.innerHTML = "";
-        rows.forEach(rowData => {
-            const row = document.createElement("tr");
-            rowData.forEach((cellData, index) => {
-                const cell = document.createElement("td");
-                if (index === 0) {
-                    cellData = parseFloat(cellData.replace(",", ".")) || cellData;
+        const rows = pastedData
+            .split("\n")
+            .filter(row => row.trim() !== "")
+            .map(row => row.split("\t"));
+
+        let activeCell = document.activeElement;
+        let activeRow = activeCell?.parentElement;
+        let activeRowIndex = Array.from(tbody.children).indexOf(activeRow);
+        let activeColIndex = Array.from(activeRow?.children || []).indexOf(activeCell);
+
+        if (!activeCell || activeRowIndex === -1 || activeColIndex === -1) return;
+
+        let existingRows = Array.from(tbody.children);
+
+        rows.forEach((rowData, rowIndex) => {
+            let row;
+            let targetRowIndex = activeRowIndex + rowIndex; // Start from selected row
+
+            if (existingRows[targetRowIndex]) {
+                row = existingRows[targetRowIndex];
+            } else {
+                addDefaultRow();
+                row = tbody.lastChild;
+                existingRows.push(row);
+            }
+
+            rowData.forEach((cellData, colIndex) => {
+                let targetColIndex = activeColIndex + colIndex;
+                if (targetColIndex < headers.length - 1) { // Prevent overflow
+                    row.children[targetColIndex].textContent = cellData;
                 }
-                cell.textContent = cellData;
-                cell.style.border = "1px solid black";
-                cell.style.padding = "3px";
-                cell.style.fontSize = "11px"
-                cell.contentEditable = "true";
-                row.appendChild(cell);
             });
-
-            tbody.appendChild(row);
         });
     });
+
     return tbody;
+}
+
+function createNewRowBtn(tableContainer, tbody, headers) {
+    const newRowBtn = document.createElement("button");
+    newRowBtn.className = "mt-2 mb-2 btn btn-outline-primary";
+    newRowBtn.textContent = "Yeni sətir əlavə et";
+    newRowBtn.style.float = "right";
+    newRowBtn.style.fontSize = "12px";
+
+    newRowBtn.addEventListener("click", () => {
+        const row = document.createElement("tr");
+        row.style.padding = "2px";
+
+        for (let j = 0; j < headers.length -1; j++) {
+            const cell = document.createElement("td");
+            cell.contentEditable = "true";
+            cell.style.border = "1px solid black";
+            cell.style.padding = "2px";
+            row.appendChild(cell);
+        }
+
+        addDeleteButton(row);
+
+        tbody.appendChild(row);
+    });
+
+    tableContainer.append(newRowBtn);
+}
+
+function addDeleteButton(row) {
+    const deleteCell = document.createElement("td");
+    const deleteButton = document.createElement("button");
+    deleteCell.style.border = "1px solid black"; 
+    deleteCell.style.padding = "2px"; 
+    deleteCell.style.textAlign = "center";
+    deleteButton.textContent = "❌";
+    deleteButton.style.border = "none";
+    deleteButton.style.background = "red";
+    deleteButton.style.color = "white";
+    deleteButton.style.cursor = "pointer";
+    deleteButton.style.width = "100%";
+    deleteButton.style.height = "100%";
+    deleteButton.onclick = () => row.remove();
+
+    deleteCell.appendChild(deleteButton);
+    row.appendChild(deleteCell);
 }
 
 function createProcessButton(tbody) {
@@ -503,8 +574,14 @@ function createProcessButton(tbody) {
 
         const tableData = rows.map(row => {
             const cells = Array.from(row.querySelectorAll("td"));
-            return cells.map(cell => cell.textContent.trim());
+            const rowData = cells.map(cell => cell.textContent.trim());
+            if (rowData.some(cell => cell === "")) {
+                alert("Cədvəldə boş xana var! Zəhmət olmasa, bütün xanaları doldurun.");
+                throw new Error("Boş xana aşkarlandı");
+            }
+            return rowData;
         });
+        
 
         const groupRowsByInvoice = (tableData) => {
             const invoices = [];
@@ -784,7 +861,7 @@ function createProcessButton(tbody) {
 	<qaimeKimden>${senderVoen}</qaimeKimden>
 	<ds />
 	<dn />
-	<des>Alqı-satqı müqaviləsi</des>
+	<des>Müqaviləyə əsasən</des>
 	<des2>${invoiceData.additionalNote}</des2>
 	<ma>${invoiceData.buyerName}</ma>
 	<mk />
@@ -807,8 +884,8 @@ function createProcessButton(tbody) {
 				<c13>${product.edv0}</c13>
 				<c14>${(parseFloat(product.edv18) * 0.18).toFixed(2)}</c14>
 				<c15>${product.roadTax}</c15>
-				<c16>${(preciseMultiply(product.quantity,product.price) + parseFloat(product.exciseTotal) + parseFloat((parseFloat(product.edv18) * 0.18).toFixed(2)) + parseFloat(product.roadTax)).toFixed(2)}</c16>
-				<c17>0</c17>
+				<c16>${(preciseMultiplier(product.quantity,product.price) + parseFloat(product.exciseTotal) + parseFloat((parseFloat(product.edv18) * 0.18).toFixed(2)) + parseFloat(product.roadTax)).toFixed(2)}</c16>
+				<c17>${product.barCode}</c17>
 				<productId>0</productId>
             </row>
             `).join('')}
@@ -860,7 +937,7 @@ function createProcessButton(tbody) {
                 products: invoiceRows.map(row => ({
                     code: row[3],
                     name: row[4],
-                    barCode: "0",
+                    barCode: row[5],
                     unit: row[6],
                     quantity:  formatNumber(row[7]), 
                     price: formatNumber(row[8]),
@@ -871,7 +948,7 @@ function createProcessButton(tbody) {
                     edv0: formatNumber(row[13]),
                     edvFree: formatNumber(row[14]),
                     edvNot: formatNumber(row[15]),
-                    productTotal: preciseMultiply(row[7],row[8])
+                    productTotal: preciseMultiplier(row[7],row[8])
                 })),
                 allTotal: allTotal.toFixed(2),
                 exciseAllTotal: exciseAllTotal.toFixed(2),
@@ -899,6 +976,7 @@ function createProcessButton(tbody) {
 
     return processButton;
 }
+
 function parseNumber(value) {
     if (typeof value === "string") {
         value = value.replace(",", ".");
@@ -907,9 +985,10 @@ function parseNumber(value) {
     return isNaN(num) ? 0 : num; 
 }
 
-const preciseMultiply = (a, b) => {
+const preciseMultiplier = (a, b) => {
     return parseFloat((parseNumber(a) * parseNumber(b)).toFixed(2));
 };
+
 function formatNumber(value) {
     if (typeof value === "string") {
         value = value.replace(",", "."); 
@@ -977,6 +1056,7 @@ function createModalForPresentation() {
     closeButton.onclick = closeModal;
 
     const tableContainer = document.createElement("div");
+    
     const tbody = creatingTable(tableContainer);
     const processButton = createProcessButton(tbody);
     tableContainer.appendChild(processButton);
@@ -1056,8 +1136,6 @@ function openModal() {
     }
     getVoenOfSender()
 }
-
-
 
 function closeModal() {
     const overlay = document.querySelector(".modal-overlay");
