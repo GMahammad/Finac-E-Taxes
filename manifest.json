@@ -22,6 +22,11 @@
     "48": "./assets/FinAc_simvol.png",
     "128": "./assets/FinAc_simvol.png"
   },
-"host_permissions": ["https://new.e-taxes.gov.az/*"]
-
+"host_permissions": ["https://new.e-taxes.gov.az/*"],
+"web_accessible_resources": [
+  {
+    "resources": ["assets/files/example.xlsx"],
+    "matches": ["<all_urls>"]
+  }
+]
 }

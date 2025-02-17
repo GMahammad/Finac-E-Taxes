@@ -21,7 +21,7 @@ chrome.storage.local.get(['authenticated'], (result) => {
 
             history.replaceState = function () {
                 originalReplaceState.apply(this, arguments);
-                handleUrlChange(); // Check URL after replaceState
+                handleUrlChange();
             };
 
             window.onpopstate = function () {
@@ -97,12 +97,7 @@ chrome.storage.local.get(['authenticated'], (result) => {
 
                 openModal();
 
-                // const listContainer = document.querySelector(".list-view");
-                // if (listContainer && !document.querySelector("#presentation-table")) {
-
-                // }
             });
-
 
         }
 
@@ -451,6 +446,7 @@ function creatingTable(tableContainer) {
     table.appendChild(tbody);
 
     createNewRowBtn(tableContainer, tbody, headers);
+    createExampleBtn(tableContainer)
 
     function addDefaultRow() {
         const row = document.createElement("tr");
@@ -542,6 +538,27 @@ function createNewRowBtn(tableContainer, tbody, headers) {
     });
 
     tableContainer.append(newRowBtn);
+}
+
+function createExampleBtn(tableContainer){
+    const exampleBtn = document.createElement("button");
+    exampleBtn.className = "mt-2 mb-2 btn btn-outline-primary";
+    exampleBtn.textContent = "Nümunəni yükləyin";
+    exampleBtn.style.float = "left";
+    exampleBtn.style.fontSize = "12px";
+
+    exampleBtn.addEventListener("click", function() {
+        const fileUrl = chrome.runtime.getURL("assets/files/example.xlsx");
+        const link = document.createElement("a");
+        link.href = fileUrl;
+        link.download = "example.xlsx"; 
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+    
+
+    tableContainer.appendChild(exampleBtn)
 }
 
 function addDeleteButton(row) {
