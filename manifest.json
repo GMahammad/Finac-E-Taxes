@@ -1,6 +1,6 @@
 {
   "name": "TaxPro",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "manifest_version": 3,
   "permissions": [
     "activeTab",
@@ -15,14 +15,13 @@
   "action": {
     "default_popup": "main.html",
     "default_title": "TaxPro Extension",
-    "default_icon": "./assets/FinAc_simvol.png"
+    "default_icon": "assets/companysymbol.png"
   },
   "icons": {
-    "16": "./assets/FinAc_simvol.png",
-    "48": "./assets/FinAc_simvol.png",
-    "128": "./assets/FinAc_simvol.png"
+    "16": "assets/companysymbol.png",
+    "48": "assets/companysymbol.png",
+    "128": "assets/companysymbol.png"
   },
-"host_permissions": ["https://new.e-taxes.gov.az/*"],
 "web_accessible_resources": [
   {
     "resources": ["assets/files/example.xlsx"],
