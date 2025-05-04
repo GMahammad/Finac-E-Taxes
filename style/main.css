@@ -30,7 +30,7 @@ button:hover{
 input{
     width: 80%;
     padding: 6px 4px;
-    border-radius: 5px;
+    border-radius: 5px; 
     margin: 5px 0;
     font-size: 15px;
 }
@@ -42,13 +42,22 @@ input{
     font-size: 16px;
 }
 
-.contact{
+footer{
     position: absolute;
-    top: 85%;
+    top: 84%;
+    width: 100%;
     left: 50%;
     transform: translateX(-50%);
 }
+.right{
+    display: block;
+    color: cornflowerblue;
+    border-bottom: 1px solid cornflowerblue;
+    width: 85%;
+    margin: auto;
+}
 .contact > p{
+    margin: 5px 0px;
     font-size: 16px;
 }
 
@@ -66,4 +75,7 @@ input{
     width: 60px;
     border-radius: 50%;
     background-color: white;
+}
+.parent-header{
+    font-size: 18px;
 }
