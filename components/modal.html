@@ -1,0 +1,100 @@
+<div id="my-extension-modal" class="custom-modal">
+  <div class="custom-modal-content">
+    <span class="custom-close">&times;</span>
+    <h4>TaxPro Vergi xidmətləri</h4>
+
+    <div class="tab-buttons">
+      <button class="tab-btn active" data-tab="eqf">Elektron Qaimələr</button>
+      <button class="tab-btn" data-tab="act">Aktlar</button>
+      <button class="tab-btn" data-tab="declaration">Bəyannamələr</button>
+      <button class="tab-btn" id="fast-eqf" data-tab="fastEqf">Sürətli təqdim etmə</button>
+    </div>
+
+    <div class="tab-content" id="eqf">
+      <div class="eqf-type-toggle">
+        <button
+          id="left-eqf-type"
+          class="eqf-type-btn active"
+          data-type="incoming"
+        >
+          Gələnlər
+        </button>
+        <button id="right-eqf-type" class="eqf-type-btn" data-type="outgoing">
+          Göndərilənlər
+        </button>
+      </div>
+
+      <div id="date-tab">
+        <label>Tarix intervalı:</label>
+        <div class="date-inputs">
+          <input type="date" id="eqf-start-date" />
+          <input type="date" id="eqf-end-date" />
+        </div>
+      </div>
+      <div class="status-tag-container">
+        <label for="status-select">Qaimə statusu:</label>
+        <select id="status-select">
+          <option value="">-- Status seçin --</option>
+          <option value="Bütün statuslar">Bütün statuslar</option>
+          <option value="Təsdiqləndi">Təsdiqləndi</option>
+          <option value="Təsdiq gözləyir">Təsdiq gözləyir</option>
+          <option value="Düzəliş edildi">Düzəliş edildi</option>
+          <option value="Düzəlişə qaytarıldı">Düzəlişə qaytarıldı</option>
+          <option value="Ləğvə göndərildi">Ləğvə göndərildi</option>
+          <option value="Düzəlişə göndərildi">Düzəlişə göndərildi</option>
+          <option value="Sistem tərəfindən təsdiqləndi">
+            Sistem tərəfindən təsdiqləndi
+          </option>
+          <option value="passiv">passiv</option>
+          <option value="Sistem tərəfindən silindi">
+            Sistem tərəfindən silindi
+          </option>
+          <option value="Silindi">Silindi</option>
+          <option value="Ləğv edildi">Ləğv edildi</option>
+        </select>
+        <label class="selected-status-label">Seçilmiş statuslar:</label>
+        <div id="status-tags" class="tags-area"></div>
+      </div>
+      <div class="eqf-main-type-box">
+        <label>Qaimə növü:</label>
+        <input type="text" placeholder="Axtar..." id="main-type-search" />
+        <div class="eqf-main-type-list" id="eqf-main-type-list"></div>
+      </div>
+    </div>
+
+    <div class="tab-content hidden" id="act">
+  
+      <div id="date-tab">
+        <label>Tarix intervalı:</label>
+        <div class="date-inputs">
+          <input type="date" id="act-start-date" />
+          <input type="date" id="act-end-date" />
+        </div>
+      </div>
+      <div class="status-tag-container">
+        <label for="status-select">Akt statusu:</label>
+        <select id="act-select"></select>
+        <label class="selected-status-label">Seçilmiş statuslar:</label>
+        <div id="act-tags" class="tags-area"></div>
+      </div>
+      <div class="eqf-main-type-box">
+        <label>Akt növü:</label>
+        <input type="text" id="act-main-type-search" placeholder="Axtar..." />
+        <div id="act-main-type-list"></div>
+      </div>
+    </div>
+
+    <div class="tab-content hidden" id="declaration">
+      <label
+        >Declaration Type:
+        <select id="dec-type">
+          <option value="vat">VAT</option>
+          <option value="income">Income</option>
+        </select>
+      </label>
+      <label>Period: <input type="month" id="dec-period" /></label>
+    </div>
+    
+    <button id="filter-submit-btn">Axtar</button>
+  </div>
+</div>
